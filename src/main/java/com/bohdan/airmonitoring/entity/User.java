@@ -25,6 +25,9 @@ public class User {
     @Column(name = "role")
     private UserRole role;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FcmToken> fcmTokens = new ArrayList<>();
+
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Device> devices = new ArrayList<>();
 
@@ -78,7 +81,8 @@ public class User {
         this.role = role;
     }
 
-    public void addNewDevice(Device device){
+    public void addNewDevice(Device device) {
         devices.add(device);
+        device.setOwner(this);
     }
 }

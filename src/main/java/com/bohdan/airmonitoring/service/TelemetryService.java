@@ -1,34 +1,80 @@
 package com.bohdan.airmonitoring.service;
 
+import com.bohdan.airmonitoring.entity.dto.TelemetryRequest;
+import com.bohdan.airmonitoring.entity.Device;
 import com.bohdan.airmonitoring.entity.TelemetryData;
+import com.bohdan.airmonitoring.entity.User;
+import com.bohdan.airmonitoring.repository.DeviceJpaRepository;
+import com.bohdan.airmonitoring.repository.TelemetryJpaRepository;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.concurrent.atomic.AtomicReference;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TelemetryService {
 
-    private final AtomicReference<TelemetryData> latestData = new AtomicReference<>(
-            new TelemetryData(0.0, 0.0, 0.0, 0, "NO_DATA")
-    );
+    private final DeviceJpaRepository deviceJpaRepository;
+    private final TelemetryJpaRepository telemetryJpaRepository;
+    private final UserNotificationService userNotificationService;
 
-    public TelemetryData saveTelemetry(TelemetryData data) {
-        if (data == null) {
-            throw new IllegalArgumentException("Telemetry data cannot be null");
-        }
-
-        if (data.getStatus() == null || data.getStatus().isBlank()) {
-            data.setStatus(data.getGasLevel() > TelemetryData.GAS_THRESHOLD ? "ALARM" : "NORMAL");
-        }
-
-        data.setReceivedAt(LocalDateTime.now());
-        latestData.set(data);
-
-        return data;
+    public TelemetryService(DeviceJpaRepository deviceJpaRepository,
+                            TelemetryJpaRepository telemetryJpaRepository,
+                            UserNotificationService userNotificationService) {
+        this.deviceJpaRepository = deviceJpaRepository;
+        this.telemetryJpaRepository = telemetryJpaRepository;
+        this.userNotificationService = userNotificationService;
     }
 
-    public TelemetryData getLatestData() {
-        return latestData.get();
+    @Transactional
+    public TelemetryData saveTelemetry(TelemetryRequest request, String deviceToken) {
+        Device device = deviceJpaRepository.findDeviceByDeviceIdAndDeviceToken(
+                request.getDeviceId(),
+                deviceToken
+        );
+
+        if (device == null) {
+            throw new IllegalArgumentException("Invalid deviceId or deviceToken");
+        }
+
+        TelemetryData telemetryData = new TelemetryData();
+        telemetryData.setDeviceId(device); // у тебе метод так називається
+        telemetryData.setTemperature(request.getTemperature());
+        telemetryData.setHumidity(request.getHumidity());
+        telemetryData.setPressure(request.getPressure());
+        telemetryData.setGasLevel(request.getGasLevel());
+
+        String status = request.getStatus();
+
+        if (status == null || status.isBlank()) {
+            status = request.getGasLevel() > TelemetryData.GAS_THRESHOLD ? "ALARM" : "NORMAL";
+        }
+
+        telemetryData.setStatus(status);
+
+        TelemetryData savedTelemetry = telemetryJpaRepository.save(telemetryData);
+
+        boolean isAlarm = "ALARM".equalsIgnoreCase(status)
+                || request.getGasLevel() > TelemetryData.GAS_THRESHOLD;
+
+        if (isAlarm) {
+            System.out.println("ALARM detected from device: " + device.getDeviceId());
+
+            User owner = device.getOwner();
+
+            if (owner == null) {
+                System.out.println("Device owner is null. Notification was not sent.");
+            } else {
+                userNotificationService.sendAlarmToUser(
+                        owner,
+                        device.getDeviceId(),
+                        request.getGasLevel()
+                );
+            }
+        }
+
+        return savedTelemetry;
+    }
+
+    public TelemetryData getLatestTelemetry() {
+        return telemetryJpaRepository.findFirstByOrderByReceivedAtDesc();
     }
 }
