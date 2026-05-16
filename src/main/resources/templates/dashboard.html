@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>IoT моніторинг повітря</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f6fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: #1f2937;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 30px auto;
+        }
+
+        .status {
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .normal {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .alarm {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .no-data {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+            text-align: center;
+        }
+
+        .card h3 {
+            margin: 0 0 15px;
+            color: #374151;
+        }
+
+        .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #111827;
+        }
+
+        .unit {
+            font-size: 18px;
+            color: #6b7280;
+        }
+
+        .footer {
+            margin-top: 25px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        @media (max-width: 800px) {
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 500px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Інтелектуальна IoT-система моніторингу стану повітря</h1>
+</header>
+
+<div class="container">
+
+    <div id="statusBox" class="status no-data">
+        Статус: очікування даних
+    </div>
+
+    <div class="cards">
+        <div class="card">
+            <h3>Температура</h3>
+            <div class="value" id="temperature">--</div>
+            <div class="unit">°C</div>
+        </div>
+
+        <div class="card">
+            <h3>Вологість</h3>
+            <div class="value" id="humidity">--</div>
+            <div class="unit">%</div>
+        </div>
+
+        <div class="card">
+            <h3>Тиск</h3>
+            <div class="value" id="pressure">--</div>
+            <div class="unit">гПа</div>
+        </div>
+
+        <div class="card">
+            <h3>Рівень газу/диму</h3>
+            <div class="value" id="gasLevel">--</div>
+            <div class="unit">ADC</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Останнє оновлення: <span id="receivedAt">--</span>
+    </div>
+
+</div>
+
+<script>
+    async function loadLatestTelemetry() {
+        try {
+            const response = await fetch('/api/telemetry/latest');
+
+            if (!response.ok) {
+                throw new Error('Server error');
+            }
+
+            const data = await response.json();
+
+            document.getElementById('temperature').textContent = data.temperature.toFixed(1);
+            document.getElementById('humidity').textContent = data.humidity.toFixed(1);
+            document.getElementById('pressure').textContent = data.pressure.toFixed(1);
+            document.getElementById('gasLevel').textContent = data.gasLevel;
+            document.getElementById('receivedAt').textContent = data.receivedAt || '--';
+
+            const statusBox = document.getElementById('statusBox');
+
+            if (data.status === 'ALARM') {
+                statusBox.textContent = 'Статус: ТРИВОГА! Виявлено підвищений рівень газу або диму';
+                statusBox.className = 'status alarm';
+            } else if (data.status === 'NORMAL') {
+                statusBox.textContent = 'Статус: Норма';
+                statusBox.className = 'status normal';
+            } else {
+                statusBox.textContent = 'Статус: очікування даних';
+                statusBox.className = 'status no-data';
+            }
+
+        } catch (error) {
+            console.error('Error loading telemetry:', error);
+
+            const statusBox = document.getElementById('statusBox');
+            statusBox.textContent = 'Статус: помилка отримання даних';
+            statusBox.className = 'status alarm';
+        }
+    }
+
+    loadLatestTelemetry();
+
+    // Оновлюємо вебсторінку кожні 2 секунди.
+    // ESP32 надсилатиме нові дані кожні 5 секунд.
+    setInterval(loadLatestTelemetry, 2000);
+</script>
+
+</body>
+</html>
