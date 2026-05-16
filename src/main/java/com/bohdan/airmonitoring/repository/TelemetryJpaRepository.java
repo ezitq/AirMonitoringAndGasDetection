@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TelemetryJpaRepository extends JpaRepository<TelemetryData, Integer> {
 
-    TelemetryData findFirstByOrderByReceivedAtDesc();
+    TelemetryData findFirstByOrderByIdDesc();
 }

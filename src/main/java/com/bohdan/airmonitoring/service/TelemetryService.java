@@ -9,6 +9,8 @@ import com.bohdan.airmonitoring.repository.TelemetryJpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 public class TelemetryService {
 
@@ -41,6 +43,7 @@ public class TelemetryService {
         telemetryData.setHumidity(request.getHumidity());
         telemetryData.setPressure(request.getPressure());
         telemetryData.setGasLevel(request.getGasLevel());
+        telemetryData.setReceivedAt(LocalDateTime.now());
 
         String status = request.getStatus();
 
@@ -75,6 +78,6 @@ public class TelemetryService {
     }
 
     public TelemetryData getLatestTelemetry() {
-        return telemetryJpaRepository.findFirstByOrderByReceivedAtDesc();
+        return telemetryJpaRepository.findFirstByOrderByIdDesc();
     }
 }

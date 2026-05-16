@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Налаштування | IoT Air Monitoring</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f6fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: #1f2937;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 30px auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #111827;
+        }
+
+        p {
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        .button {
+            border: none;
+            border-radius: 10px;
+            padding: 13px 18px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #2563eb;
+            color: white;
+        }
+
+        .button:hover {
+            background: #1d4ed8;
+        }
+
+        .secondary {
+            background: #374151;
+        }
+
+        .secondary:hover {
+            background: #111827;
+        }
+
+        .message {
+            margin-top: 18px;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .info {
+            background: #e0f2fe;
+            color: #075985;
+        }
+
+        .token-box {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 12px;
+            color: #374151;
+            word-break: break-all;
+            display: none;
+        }
+
+        .nav {
+            margin-bottom: 20px;
+        }
+
+        .nav a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .nav a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Налаштування системи</h1>
+</header>
+
+<div class="container">
+
+    <div class="nav">
+        <a href="/">← Повернутися на головну панель</a>
+    </div>
+
+    <div class="card">
+        <h2>Push-сповіщення на цей пристрій</h2>
+
+        <p>
+            Щоб отримувати сповіщення про виявлення задимлення або підвищений рівень газу,
+            відкрийте цю сторінку на телефоні або комп’ютері та натисніть кнопку прив’язки.
+            Браузер попросить дозвіл на надсилання сповіщень.
+        </p>
+
+        <p>
+            Після підтвердження дозвілу сервер збереже FCM-токен цього браузера
+            та буде використовувати його для надсилання тривожних повідомлень.
+        </p>
+
+        <button class="button" onclick="registerFcmToken()">
+            Прив’язати цей пристрій для сповіщень
+        </button>
+
+        <button class="button secondary" onclick="sendTestNotification()">
+            Надіслати тестове сповіщення
+        </button>
+
+        <div id="messageBox"></div>
+
+        <div id="tokenBox" class="token-box"></div>
+    </div>
+
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyANL5S0DVVuXSKLaafGhZc8t3O6ZYLWZpE",
+        authDomain: "airmonitoringandgasdetection.firebaseapp.com",
+        projectId: "airmonitoringandgasdetection",
+        storageBucket: "airmonitoringandgasdetection.firebasestorage.app",
+        messagingSenderId: "274729974150",
+        appId: "1:274729974150:web:6709cdd4ce52b1fcbf5407",
+        measurementId: "G-KSH0L60JSN"
+    };
+
+    const vapidKey = "BKyg2IL6gUL-27Su2qzI65XpBmUfqLeRHexO6xG9H05azHZehzef8gt34MmgxcsdWWYnypYYnUc7Gi9IGstiRqc";
+
+    const app = initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
+
+    function showMessage(text, type) {
+        const messageBox = document.getElementById("messageBox");
+        messageBox.className = "message " + type;
+        messageBox.textContent = text;
+    }
+
+    function showToken(token) {
+        const tokenBox = document.getElementById("tokenBox");
+        tokenBox.style.display = "block";
+        tokenBox.textContent = token;
+    }
+
+    window.registerFcmToken = async function () {
+        try {
+            showMessage("Запит дозволу на сповіщення...", "info");
+
+            const permission = await Notification.requestPermission();
+
+            if (permission !== "granted") {
+                showMessage("Дозвіл на сповіщення не надано.", "error");
+                return;
+            }
+
+            const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+
+            const token = await getToken(messaging, {
+                vapidKey: vapidKey,
+                serviceWorkerRegistration: registration
+            });
+
+            if (!token) {
+                showMessage("Не вдалося отримати FCM-токен.", "error");
+                return;
+            }
+
+            showToken(token);
+
+            const response = await fetch("/api/fcm/token/current-user", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    token: token
+                })
+            });
+
+            const responseText = await response.text();
+
+            if (!response.ok) {
+                showMessage("Помилка збереження токена: " + responseText, "error");
+                return;
+            }
+
+            showMessage("Цей пристрій успішно прив’язано для push-сповіщень.", "success");
+
+        } catch (error) {
+            console.error("FCM registration error:", error);
+            showMessage("Помилка FCM: " + error.message, "error");
+        }
+    };
+
+    window.sendTestNotification = async function () {
+        try {
+            const response = await fetch("/api/test-fcm/send-current-user", {
+                method: "POST"
+            });
+
+            const text = await response.text();
+
+            if (!response.ok) {
+                showMessage("Помилка тестового сповіщення: " + text, "error");
+                return;
+            }
+
+            showMessage("Тестове сповіщення відправлено.", "success");
+
+        } catch (error) {
+            showMessage("Помилка: " + error.message, "error");
+        }
+    };
+
+    onMessage(messaging, (payload) => {
+        console.log("Foreground message received:", payload);
+
+        alert(payload.notification.title + "\n" + payload.notification.body);
+    });
+</script>
+
+</body>
+</html>

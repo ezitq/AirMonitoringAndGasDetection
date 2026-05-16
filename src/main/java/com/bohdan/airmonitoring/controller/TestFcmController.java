@@ -1,8 +1,9 @@
 package com.bohdan.airmonitoring.controller;
 
-import com.bohdan.airmonitoring.entity.FcmToken;
-import com.bohdan.airmonitoring.repository.FcmTokenJpaRepository;
-import com.bohdan.airmonitoring.service.FcmNotificationService;
+import com.bohdan.airmonitoring.entity.User;
+import com.bohdan.airmonitoring.repository.UserJpaRepository;
+import com.bohdan.airmonitoring.service.UserNotificationService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,29 +11,37 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/test-fcm")
 public class TestFcmController {
 
-    private final FcmTokenJpaRepository fcmTokenJpaRepository;
-    private final FcmNotificationService fcmNotificationService;
+    private final UserJpaRepository userJpaRepository;
+    private final UserNotificationService userNotificationService;
 
-    public TestFcmController(FcmTokenJpaRepository fcmTokenJpaRepository,
-                             FcmNotificationService fcmNotificationService) {
-        this.fcmTokenJpaRepository = fcmTokenJpaRepository;
-        this.fcmNotificationService = fcmNotificationService;
+    public TestFcmController(UserJpaRepository userJpaRepository,
+                             UserNotificationService userNotificationService) {
+        this.userJpaRepository = userJpaRepository;
+        this.userNotificationService = userNotificationService;
     }
 
-    @PostMapping("/send")
-    public ResponseEntity<?> sendTestNotification() {
-        FcmToken token = fcmTokenJpaRepository.findAll()
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No FCM tokens saved"));
+    @PostMapping("/send-current-user")
+    public ResponseEntity<String> sendTestToCurrentUser(HttpSession session) {
+        Object userIdObject = session.getAttribute("userId");
 
-        String response = fcmNotificationService.sendAlarmNotification(
-                token.getToken(),
-                "Тестове сповіщення",
-                "FCM успішно інтегровано у Spring Boot застосунок",
-                "TEST-DEVICE"
+        if (userIdObject == null) {
+            return ResponseEntity.status(401).body("User is not logged in");
+        }
+
+        int userId = (int) userIdObject;
+
+        User user = userJpaRepository.findUserById(userId);
+
+        if (user == null) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+
+        userNotificationService.sendAlarmToUser(
+                user,
+                "TEST-DEVICE",
+                999
         );
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok("Test notification sent");
     }
 }

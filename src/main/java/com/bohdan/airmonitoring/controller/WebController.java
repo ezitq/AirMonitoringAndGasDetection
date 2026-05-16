@@ -4,6 +4,7 @@ import com.bohdan.airmonitoring.entity.User;
 import com.bohdan.airmonitoring.entity.UserRole;
 import com.bohdan.airmonitoring.service.DeviceService;
 import com.bohdan.airmonitoring.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -69,15 +70,26 @@ public class WebController {
     }
 
     @PostMapping("/login")
-    public String loginUser(@RequestParam String username,
+    public String login(@RequestParam String username,
                         @RequestParam String password,
+                        HttpSession session,
                         Model model) {
 
-        if (userService.validateUser(username, password)) {
+        User user = userService.findUserByEmail(username);
+
+        if (user != null && userService.validateUser(username, password)) {
+            session.setAttribute("userId", user.getId());
+            session.setAttribute("userEmail", user.getEmail());
+
             return "dashboard";
         }
 
         model.addAttribute("error", "Неправильний email або пароль.");
         return "login";
+    }
+
+    @GetMapping("/settings")
+    public String showSettingsPage() {
+        return "settings";
     }
 }
