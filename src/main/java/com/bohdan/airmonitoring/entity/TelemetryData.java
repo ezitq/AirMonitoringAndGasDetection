@@ -1,16 +1,37 @@
 package com.bohdan.airmonitoring.entity;
 
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "telemetries")
 public class TelemetryData {
 
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
     private int id;
-    private int deviceId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "device", nullable = false)
+    private Device device;
+
+    @Column(name = "temperature")
     private double temperature;
+
+    @Column(name = "humidity")
     private double humidity;
+
+    @Column(name = "pressure")
     private double pressure;
+
+    @Column(name = "gas_level")
     private int gasLevel;
+
+    @Column(name = "status")
     private String status;
+
+    @Column(name = "receivedAt")
     private LocalDateTime receivedAt;
     public static final int GAS_THRESHOLD = 650;
 
@@ -34,12 +55,12 @@ public class TelemetryData {
         this.id = id;
     }
 
-    public int getDeviceId() {
-        return deviceId;
+    public Device getDeviceId() {
+        return device;
     }
 
-    public void setDeviceId(int deviceId) {
-        this.deviceId = deviceId;
+    public void setDeviceId(Device device) {
+        this.device = device;
     }
 
     public double getTemperature() {

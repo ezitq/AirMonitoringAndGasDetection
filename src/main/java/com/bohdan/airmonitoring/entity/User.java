@@ -1,15 +1,37 @@
 package com.bohdan.airmonitoring.entity;
 
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "users")
 public class User {
 
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
     private int id;
+
+    @Column(name = "full_name")
     private String fullName;
+
+    @Column(name = "email")
     private String email;
+
+    @Column(name = "password")
     private String password;
+
+    @Column(name = "role")
     private UserRole role;
 
-    public User(int id, String fullName, String email, String password, UserRole role) {
-        this.id = id;
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Device> devices = new ArrayList<>();
+
+    public User() {
+    }
+
+    public User(String fullName, String email, String password, UserRole role) {
         this.fullName = fullName;
         this.email = email;
         this.password = password;
@@ -54,5 +76,9 @@ public class User {
 
     public void setRole(UserRole role) {
         this.role = role;
+    }
+
+    public void addNewDevice(Device device){
+        devices.add(device);
     }
 }

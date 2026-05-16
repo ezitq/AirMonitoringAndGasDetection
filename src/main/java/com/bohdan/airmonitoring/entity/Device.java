@@ -1,45 +1,57 @@
 package com.bohdan.airmonitoring.entity;
 
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "devices")
 public class Device {
 
-    private final String deviceID;
-    private final String deviceToken;
-    private final int pairingCode;
-    private int ownerUserId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    private int id;
+
+    @Column(name = "device_id")
+    private String deviceId;
+
+    @Column(name = "device_token")
+    private String deviceToken;
+
+    @Column(name = "pairing_code")
+    private String pairingCode;
+
+    @Column(name = "paired")
     private boolean paired;
 
-    public Device(int pairingCode, String deviceToken, String deviceID) {
-        this.pairingCode = pairingCode;
-        this.deviceToken = deviceToken;
-        this.deviceID = deviceID;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner")
+    private User owner;
+
+    @OneToMany(mappedBy = "device", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TelemetryData> telemetryDataList = new ArrayList<>();
+
+    public Device() {
     }
 
-    public Device(String deviceID, String deviceToken, int pairingCode, int ownerUserId, boolean paired) {
-        this.deviceID = deviceID;
+    public Device(String deviceId, String deviceToken, String pairingCode) {
+        this.deviceId = deviceId;
         this.deviceToken = deviceToken;
         this.pairingCode = pairingCode;
-        this.ownerUserId = ownerUserId;
-        this.paired = paired;
+        this.paired = false;
     }
 
-    public String getDeviceID() {
-        return deviceID;
+    public String getDeviceId() {
+        return deviceId;
     }
 
     public String getDeviceToken() {
         return deviceToken;
     }
 
-    public int getPairingCode() {
+    public String getPairingCode() {
         return pairingCode;
-    }
-
-    public int getOwnerUserId() {
-        return ownerUserId;
-    }
-
-    public void setOwnerUserId(int ownerUserId) {
-        this.ownerUserId = ownerUserId;
     }
 
     public boolean isPaired() {
@@ -48,5 +60,41 @@ public class Device {
 
     public void setPaired(boolean paired) {
         this.paired = paired;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public void setDeviceToken(String deviceToken) {
+        this.deviceToken = deviceToken;
+    }
+
+    public void setPairingCode(String pairingCode) {
+        this.pairingCode = pairingCode;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public User getOwner() {
+        return owner;
+    }
+
+    public void setOwner(User owner) {
+        this.owner = owner;
+    }
+
+    public List<TelemetryData> getTelemetryDataList() {
+        return telemetryDataList;
+    }
+
+    public void setTelemetryDataList(List<TelemetryData> telemetryDataList) {
+        this.telemetryDataList = telemetryDataList;
     }
 }
