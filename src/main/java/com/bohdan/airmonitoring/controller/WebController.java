@@ -27,7 +27,7 @@ public class WebController {
         this.deviceService = deviceService;
     }
 
-    @GetMapping("/")
+    @GetMapping("/dashboard")
     public String showMainDashboard() {
         return "dashboard";
     }
@@ -42,14 +42,14 @@ public class WebController {
         return "registration";
     }
 
-    @PostMapping("/register")
+    @PostMapping("/registration")
     public String registerUser(@RequestParam (name = "fullName") String fullName,
                                @RequestParam String email,
                                @RequestParam String confirmPassword,
                                @RequestParam String pairingCode,
                                @RequestParam String password,
                                Model model) {
-
+        System.out.println("=== REGISTER CALLED ===");
         String errorMessage = userService.validateRegistration(email,password,confirmPassword);
 
         if(!Objects.equals(errorMessage, "Успішно!")){
@@ -69,24 +69,6 @@ public class WebController {
         return "redirect:/login";
     }
 
-    @PostMapping("/login")
-    public String login(@RequestParam String username,
-                        @RequestParam String password,
-                        HttpSession session,
-                        Model model) {
-
-        User user = userService.findUserByEmail(username);
-
-        if (user != null && userService.validateUser(username, password)) {
-            session.setAttribute("userId", user.getId());
-            session.setAttribute("userEmail", user.getEmail());
-
-            return "dashboard";
-        }
-
-        model.addAttribute("error", "Неправильний email або пароль.");
-        return "login";
-    }
 
     @GetMapping("/settings")
     public String showSettingsPage() {

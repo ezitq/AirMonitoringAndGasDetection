@@ -4,20 +4,31 @@ import com.bohdan.airmonitoring.entity.User;
 import com.bohdan.airmonitoring.repository.UserJpaRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @Transactional
-public class UserService {
+public class UserService implements UserDetailsService {
 
     private UserJpaRepository repository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(UserJpaRepository repository) {
+    public UserService(UserJpaRepository repository,BCryptPasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public void saveUser(User user){
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         repository.save(user);
     }
 
@@ -55,5 +66,22 @@ public class UserService {
         }
 
             return "Успішно!";
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = repository.findUserByEmail(email);
+
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found");
+        }
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
+                List.of(
+                        new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+                )
+        );
     }
 }

@@ -134,13 +134,12 @@
             if (token) {
                 console.log('FCM token:', token);
 
-                await fetch('/api/fcm/token', {
+                await fetch('/api/fcm/token/current-user', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        email: "b1@gmail.com",
                         token: token
                     })
                 });

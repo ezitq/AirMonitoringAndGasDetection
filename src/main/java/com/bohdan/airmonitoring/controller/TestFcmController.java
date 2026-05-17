@@ -3,8 +3,8 @@ package com.bohdan.airmonitoring.controller;
 import com.bohdan.airmonitoring.entity.User;
 import com.bohdan.airmonitoring.repository.UserJpaRepository;
 import com.bohdan.airmonitoring.service.UserNotificationService;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,16 +21,13 @@ public class TestFcmController {
     }
 
     @PostMapping("/send-current-user")
-    public ResponseEntity<String> sendTestToCurrentUser(HttpSession session) {
-        Object userIdObject = session.getAttribute("userId");
+    public ResponseEntity<String> sendTestToCurrentUser(
+            Authentication authentication
+    ) {
 
-        if (userIdObject == null) {
-            return ResponseEntity.status(401).body("User is not logged in");
-        }
+        String email = authentication.getName();
 
-        int userId = (int) userIdObject;
-
-        User user = userJpaRepository.findUserById(userId);
+        User user = userJpaRepository.findUserByEmail(email);
 
         if (user == null) {
             return ResponseEntity.badRequest().body("User not found");
