@@ -19,11 +19,11 @@ public class TelemetryController {
 
     @PostMapping
     public ResponseEntity<?> receiveTelemetry(
-            @RequestHeader("X-Device-Token") String deviceToken,
+            @RequestHeader("X-Device-Token") String pairingCode,
             @RequestBody TelemetryRequest request
     ) {
         try {
-            TelemetryData savedTelemetry = telemetryService.saveTelemetry(request, deviceToken);
+            TelemetryData savedTelemetry = telemetryService.saveTelemetry(request, pairingCode);
             return ResponseEntity.ok(new TelemetryResponse(savedTelemetry));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

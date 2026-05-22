@@ -27,10 +27,9 @@ public class TelemetryService {
     }
 
     @Transactional
-    public TelemetryData saveTelemetry(TelemetryRequest request, String deviceToken) {
-        Device device = deviceJpaRepository.findDeviceByDeviceIdAndDeviceToken(
-                request.getDeviceId(),
-                deviceToken
+    public TelemetryData saveTelemetry(TelemetryRequest request, String pairingCode) {
+        Device device = deviceJpaRepository.findDeviceByPairingCode(
+                pairingCode
         );
 
         if (device == null) {
@@ -38,7 +37,7 @@ public class TelemetryService {
         }
 
         TelemetryData telemetryData = new TelemetryData();
-        telemetryData.setDeviceId(device); // у тебе метод так називається
+        telemetryData.setDeviceId(device);
         telemetryData.setTemperature(request.getTemperature());
         telemetryData.setHumidity(request.getHumidity());
         telemetryData.setPressure(request.getPressure());

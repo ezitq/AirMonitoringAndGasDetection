@@ -2,7 +2,7 @@ package com.bohdan.airmonitoring.entity.dto;
 
 public class TelemetryRequest {
 
-    private String deviceId;
+    private String pairingCode;
     private double temperature;
     private double humidity;
     private double pressure;
@@ -12,8 +12,12 @@ public class TelemetryRequest {
     public TelemetryRequest() {
     }
 
-    public String getDeviceId() {
-        return deviceId;
+    public String getPairingCode() {
+        return pairingCode;
+    }
+
+    public void setPairingCode(String pairingCode) {
+        this.pairingCode = pairingCode;
     }
 
     public double getTemperature() {
@@ -34,10 +38,6 @@ public class TelemetryRequest {
 
     public String getStatus() {
         return status;
-    }
-
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
     }
 
     public void setTemperature(double temperature) {

@@ -18,11 +18,13 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
 
                 .authorizeHttpRequests(auth -> auth
+                        // ДОДАЄМО /api/** ДО ДОЗВОЛЕНИХ МАРШРУТІВ
                         .requestMatchers(
                                 "/",
                                 "/login",
                                 "/registration",
-                                "/error"
+                                "/error",
+                                "/api/**" // <--- ДОДАНО! Дозволяє ESP32 відправляти дані та JS отримувати latest
                         ).permitAll()
 
                         .requestMatchers("/dashboard", "/settings")
@@ -37,6 +39,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
+                // ... formLogin та logout залишаються без змін ...
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")

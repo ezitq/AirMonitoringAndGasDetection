@@ -9,5 +9,9 @@ public interface DeviceJpaRepository extends JpaRepository<Device, Integer> {
 
     Device findDeviceByDeviceIdAndDeviceToken(String deviceId, String deviceToken);
 
+    Device findDeviceByDeviceToken(String deviceToken);
+
+    Device findDeviceByDeviceId(String deviceId);
+
     Device findDeviceByPairingCode(String pairingCode);
 }
