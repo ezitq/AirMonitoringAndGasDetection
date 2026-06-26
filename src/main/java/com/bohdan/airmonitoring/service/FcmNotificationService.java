@@ -20,7 +20,7 @@ public class FcmNotificationService {
                             .setBody(body)
                             .build())
                     .putData("deviceId", deviceId)
-                    .putData("type", "ALARM")
+                    .putData("type", "DANGER")
                     .build();
 
             return FirebaseMessaging.getInstance().send(message);

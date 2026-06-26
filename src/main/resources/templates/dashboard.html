@@ -39,6 +39,11 @@
             color: #166534;
         }
 
+        .warning {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
         .alarm {
             background: #fee2e2;
             color: #991b1b;
@@ -61,6 +66,11 @@
             padding: 20px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
             text-align: center;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to   { transform: translateX(0); opacity: 1; }
         }
 
         .card h3 {
@@ -154,9 +164,37 @@
 
     onMessage(messaging, (payload) => {
         console.log('Foreground message received:', payload);
-
-        alert(payload.notification.title + "\n" + payload.notification.body);
+        showToast(payload.notification.title, payload.notification.body);
     });
+
+    function showToast(title, body) {
+        // Якщо вже є toast — не показуємо новий
+        if (document.getElementById('fcm-toast')) return;
+
+        const toast = document.createElement('div');
+        toast.id = 'fcm-toast';
+        toast.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 9999;
+        background: #1f2937; color: white;
+        padding: 16px 20px; border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        max-width: 320px; font-family: Arial, sans-serif;
+        animation: slideIn 0.3s ease;
+    `;
+        toast.innerHTML = `
+        <strong style="display:block; margin-bottom:6px;">🔔 ${title}</strong>
+        <span style="font-size:14px; color:#d1d5db;">${body}</span>
+        <button onclick="this.parentElement.remove()" style="
+            position:absolute; top:8px; right:10px;
+            background:none; border:none; color:white;
+            font-size:18px; cursor:pointer;">×</button>
+    `;
+
+        document.body.appendChild(toast);
+
+        // Автоматично закривається через 5 секунд
+        setTimeout(() => toast.remove(), 5000);
+    }
 
     registerFcmToken();
 </script>
@@ -211,7 +249,12 @@
 <script>
     async function loadLatestTelemetry() {
         try {
-            const response = await fetch('/api/telemetry/latest');
+            const response = await fetch('/api/telemetry/live');
+
+            if (response.status === 204) {
+                // Даних ще немає — просто чекаємо
+                return;
+            }
 
             if (!response.ok) {
                 throw new Error('Server error');
@@ -227,14 +270,23 @@
 
             const statusBox = document.getElementById('statusBox');
 
-            if (data.status === 'ALARM') {
-                statusBox.textContent = 'Статус: ТРИВОГА! Виявлено підвищений рівень газу або диму';
+            if (data.status === 'DANGER') {
+                statusBox.textContent = '🔴 НЕБЕЗПЕКА! Критичний рівень газу!';
                 statusBox.className = 'status alarm';
+            } else if (data.status === 'WARNING') {
+                statusBox.textContent = '🟡 УВАГА! Підвищений рівень газу';
+                statusBox.className = 'status warning'; // ← новий клас
+            } else if (data.status === 'TEMP_ALERT') {
+                statusBox.textContent = '🌡️ УВАГА! Висока температура';
+                statusBox.className = 'status warning';
+            } else if (data.status === 'HUM_ALERT') {
+                statusBox.textContent = '💧 УВАГА! Висока вологість';
+                statusBox.className = 'status warning';
             } else if (data.status === 'NORMAL') {
-                statusBox.textContent = 'Статус: Норма';
+                statusBox.textContent = '✅ Норма';
                 statusBox.className = 'status normal';
             } else {
-                statusBox.textContent = 'Статус: очікування даних';
+                statusBox.textContent = 'Очікування даних...';
                 statusBox.className = 'status no-data';
             }
 

@@ -19,20 +19,32 @@ public class UserNotificationService {
         this.fcmNotificationService = fcmNotificationService;
     }
 
+    // Метод для тривоги (викликається з TelemetryService)
     public void sendAlarmToUser(User user, String deviceId, int gasLevel) {
         List<FcmToken> tokens = fcmTokenJpaRepository.findAllByUser(user);
 
-        System.out.println("FCM tokens found for user " + user.getEmail() + ": " + tokens.size());
+        String title = "🚨 Увага! Виявлено задимлення";
+        String body = "Пристрій " + deviceId + " зафіксував рівень газу/диму: " + gasLevel;
 
         for (FcmToken fcmToken : tokens) {
             String response = fcmNotificationService.sendAlarmNotification(
-                    fcmToken.getToken(),
-                    "Увага! Виявлено задимлення",
-                    "Пристрій " + deviceId + " зафіксував рівень газу/диму: " + gasLevel,
-                    deviceId
+                    fcmToken.getToken(), title, body, deviceId
             );
+            System.out.println("FCM Alarm response for token " + fcmToken.getId() + ": " + response);
+        }
+    }
 
-            System.out.println("FCM response: " + response);
+    public void sendSafeToUser(User user, String deviceId) {
+        List<FcmToken> tokens = fcmTokenJpaRepository.findAllByUser(user);
+
+        String title = "✅ Безпека";
+        String body = "Пристрій " + deviceId + " повідомляє, що повітря чисте. Тривога минула.";
+
+        for (FcmToken fcmToken : tokens) {
+            String response = fcmNotificationService.sendAlarmNotification( // Якщо у fcmNotificationService є окремий метод для звичайних повідомлень, краще використати його
+                    fcmToken.getToken(), title, body, deviceId
+            );
+            System.out.println("FCM Safe response for token " + fcmToken.getId() + ": " + response);
         }
     }
 }

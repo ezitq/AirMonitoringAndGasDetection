@@ -1,5 +1,7 @@
 package com.bohdan.airmonitoring.entity.dto;
 
+import java.time.LocalDateTime;
+
 public class TelemetryRequest {
 
     private String pairingCode;
@@ -8,6 +10,7 @@ public class TelemetryRequest {
     private double pressure;
     private int gasLevel;
     private String status;
+    private LocalDateTime receivedAt;
 
     public TelemetryRequest() {
     }
@@ -58,5 +61,13 @@ public class TelemetryRequest {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public LocalDateTime getReceivedAt() {
+        return receivedAt;
+    }
+
+    public void setReceivedAt(LocalDateTime receivedAt) {
+        this.receivedAt = receivedAt;
     }
 }

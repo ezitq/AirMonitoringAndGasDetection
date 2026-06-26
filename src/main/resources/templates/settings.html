@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="uk">
+
 <head>
     <meta charset="UTF-8">
     <title>Налаштування | IoT Air Monitoring</title>
@@ -41,6 +42,30 @@
         p {
             color: #4b5563;
             line-height: 1.5;
+        }
+
+        .telemetry-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .telemetry-table th,
+        .telemetry-table td {
+            border: 1px solid #e5e7eb;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .telemetry-table th {
+            background: #f3f4f6;
+            color: #111827;
+            font-weight: bold;
+        }
+
+        .telemetry-table tr:nth-child(even) {
+            background: #f9fafb;
         }
 
         .button {
@@ -115,6 +140,7 @@
         }
     </style>
 </head>
+
 <body>
 
 <header>
@@ -124,7 +150,7 @@
 <div class="container">
 
     <div class="nav">
-        <a href="/">← Повернутися на головну панель</a>
+        <a href="/dashboard">← Повернутися на головну панель</a>
     </div>
 
     <div class="card">
@@ -154,11 +180,47 @@
         <div id="tokenBox" class="token-box"></div>
     </div>
 
+    <div class="card">
+        <h2>Останні журнали телеметрії</h2>
+
+        <label for="logsLimit">Показати записів:</label>
+
+        <select id="logsLimit" onchange="loadTelemetryLogs()">
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+        </select>
+
+        <table class="telemetry-table">
+            <thead>
+            <tr>
+                <th>Час</th>
+                <th>Температура</th>
+                <th>Вологість</th>
+                <th>Тиск</th>
+                <th>Задимлення</th>
+                <th>Статус</th>
+            </tr>
+            </thead>
+
+            <tbody id="telemetryLogsBody">
+            <tr>
+                <td colspan="6">Завантаження...</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
     import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging.js";
+
+    const tbody = document.getElementById("telemetryLogsBody");
 
     const firebaseConfig = {
         apiKey: "AIzaSyANL5S0DVVuXSKLaafGhZc8t3O6ZYLWZpE",
@@ -263,6 +325,44 @@
         alert(payload.notification.title + "\n" + payload.notification.body);
     });
 </script>
+<script>
+    async function loadTelemetryLogs() {
+        const tbody = document.getElementById("telemetryLogsBody"); // ← додати сюди
+        const limit = document.getElementById("logsLimit").value;
 
+        const response = await fetch(`/api/telemetry/my?limit=${limit}`);
+
+        if (!response.ok) {
+            tbody.innerHTML = `<tr><td colspan="6">Помилка завантаження даних</td></tr>`;
+            return;
+        }
+
+        const data = await response.json();
+        tbody.innerHTML = "";
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6">Немає даних</td></tr>`;
+            return;
+        }
+
+        data.forEach(log => {
+            const time = log.receivedAt ? new Date(log.receivedAt).toLocaleString("uk-UA") : "—";
+            tbody.innerHTML += `
+            <tr>
+                <td>${time}</td>
+                <td>${log.temperature ?? "—"}</td>
+                <td>${log.humidity ?? "—"}</td>
+                <td>${log.pressure ?? "—"}</td>
+                <td>${log.gasLevel ?? "—"}</td>
+                <td>${log.status ?? "—"}</td>
+            </tr>
+        `;
+        });
+    }
+
+    // Завантажити одразу при відкритті сторінки
+    loadTelemetryLogs();
+</script>
 </body>
+
 </html>

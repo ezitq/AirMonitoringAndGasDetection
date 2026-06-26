@@ -24,10 +24,12 @@ public class SecurityConfig {
                                 "/login",
                                 "/registration",
                                 "/error",
-                                "/api/**" // <--- ДОДАНО! Дозволяє ESP32 відправляти дані та JS отримувати latest
+                                "/api/telemetry/latest",
+                                "/api/telemetry/live",
+                                "/api/telemetry"// <--- ДОДАНО! Дозволяє ESP32 відправляти дані та JS отримувати latest
                         ).permitAll()
 
-                        .requestMatchers("/dashboard", "/settings")
+                        .requestMatchers("/dashboard", "/settings", "/api/**")
                         .hasAnyRole(
                                 UserRole.USER.name(),
                                 UserRole.ADMIN.name()

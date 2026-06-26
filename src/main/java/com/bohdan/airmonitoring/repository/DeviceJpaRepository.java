@@ -1,6 +1,7 @@
 package com.bohdan.airmonitoring.repository;
 
 import com.bohdan.airmonitoring.entity.Device;
+import com.bohdan.airmonitoring.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +15,6 @@ public interface DeviceJpaRepository extends JpaRepository<Device, Integer> {
     Device findDeviceByDeviceId(String deviceId);
 
     Device findDeviceByPairingCode(String pairingCode);
+
+    Device findDeviceByOwner(User owner);
 }

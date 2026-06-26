@@ -1,5 +1,6 @@
 package com.bohdan.airmonitoring.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ public class TelemetryData {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "device", nullable = false)
+    @JsonIgnore
     private Device device;
 
     @Column(name = "temperature")
@@ -33,7 +35,7 @@ public class TelemetryData {
 
     @Column(name = "receivedAt")
     private LocalDateTime receivedAt;
-    public static final int GAS_THRESHOLD = 650;
+    public static final int GAS_THRESHOLD = 1500;
 
     public TelemetryData() {
     }

@@ -1,5 +1,6 @@
 package com.bohdan.airmonitoring.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ public class Device {
     private String deviceId;
 
     @Column(name = "device_token")
+    @JsonIgnore
     private String deviceToken;
 
     @Column(name = "pairing_code")
@@ -27,9 +29,11 @@ public class Device {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
+    @JsonIgnore
     private User owner;
 
     @OneToMany(mappedBy = "device", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<TelemetryData> telemetryDataList = new ArrayList<>();
 
     public Device() {
